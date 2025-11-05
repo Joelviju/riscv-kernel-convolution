@@ -1,9 +1,9 @@
 # LEDS: 0x11080000
 # SWITCHES: 0x11000000
 
-.globl main
-.type main, @function
-main:
+.globl _start
+.type _start, @function
+_start:
     addi sp, sp, -4
     sw a0, 4(sp)
     # move image pointer and dimension into argument registers

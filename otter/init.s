@@ -34,3 +34,7 @@ isr:
 	lw a0, 4(sp)
 	addi sp, sp, 4
     mret
+.data
+.globl img
+img:
+    .byte 0
