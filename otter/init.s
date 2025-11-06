@@ -37,4 +37,13 @@ isr:
 .data
 .globl img
 img:
-    .byte 0
+    .incbin "../image_assmblr/image.bin"
+    
+	
+	
+    
+	
+	
+
+	
+	

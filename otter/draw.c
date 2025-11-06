@@ -1,15 +1,15 @@
 #include "draw.h"
 #include "processing.h"
-#include "uart.h"   // ✅ Added for QEMU UART output
-
+#include "uart.h"   
+#include "cycle.h"
 
 #ifndef MULTICYCLE
 void draw_dot(coord_type offset, RGB_332_type RGB)
 {
-    // Write pixel to VGA memory (works only on FPGA)
+
     ((RGB_332_type *)VGA_ADDR)[offset] = RGB;
 
-    // ✅ Limit debug output to avoid flooding QEMU
+
     if (offset % 500 == 0) {
         uart_puts("Pixel #");
         uart_put_hex(offset);
@@ -33,7 +33,7 @@ void draw_dot(int col, int row, unsigned char RGB)
     *(vgaAddr)  = address;
     *(vgaColor) = RGB;
 
-    // ✅ Limited UART debug (for QEMU visibility)
+    
     if ((col + row) % 100 == 0) {
         uart_puts("MC Pixel [");
         uart_put_hex(col);
@@ -46,7 +46,7 @@ void draw_dot(int col, int row, unsigned char RGB)
 }
 #endif
 
-// ✅ Draws an image pixel by pixel
+
 void draw_image(RGB_332_type *image)
 {
     uart_puts("Drawing image...\n");
@@ -65,7 +65,7 @@ void draw_image(RGB_332_type *image)
     uart_puts("Image draw complete!\n");
 }
 
-// ✅ Benchmark routine for Sobel filter (hardware switch dependent)
+
 void sobel_bench(RGB_332_type *image)
 {
     uart_puts("Starting Sobel benchmark...\n");
@@ -86,17 +86,45 @@ void sobel_bench(RGB_332_type *image)
     uart_puts("Sobel benchmark complete.\n");
 }
 
-// ✅ Main image processing entry point
 void run_img_proc(RGB_332_type *image)
 {
     uart_puts("Running image processing pipeline...\n");
 
     draw_image(image);
 
-#ifdef BENCH
-    uart_puts("BENCH mode active: Running Sobel...\n");
-    sobel_bench(image);
-#endif
+    uart_puts("Image draw complete!\n");
 
-    uart_puts("Image processing complete.\n");
+    // ✅ Print final image to stdout in PPM format
+    uart_puts("PPM_BEGIN\n");
+
+    // PPM header
+    uart_puts("P3 20 20 7\n");
+
+    int offset = 0;
+    for (int row = 0; row < 20; row++)
+    {
+        for (int col = 0; col < 20; col++)
+        {
+            RGB_332_type px = image[offset++];
+            int r = (px >> 5) & 0x7;
+            int g = (px >> 2) & 0x7;
+            int b = px & 0x3;
+
+            // scale to visible brightness
+            r = r * 36;
+            g = g * 36;
+            b = b * 85;
+
+            // Print pixel
+            uart_put_hex(r);
+            uart_putc(' ');
+            uart_put_hex(g);
+            uart_putc(' ');
+            uart_put_hex(b);
+            uart_putc(' ');
+        }
+        uart_putc('\n');
+    }
+
+    uart_puts("PPM_END\n");
 }
